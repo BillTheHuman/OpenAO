@@ -1,0 +1,31 @@
+{
+  "at": "2026-09-17T18:20:48.863Z",
+  "url": "http://127.0.0.1:50619/register",
+  "status": 200,
+  "formReady": true,
+  "text": "AO\nAOWeb\nInicio\nPersonajes\nArenas\nRanking\nWiki\nDiscord\nIngresar\nREGISTRO\n\nAOWEB\n\nCrear cuenta\n\nTu nombre de usuario sera el nombre visible por defecto en Arenas.\n\nCrear cuenta\nYa tenes una cuenta?\nIniciar sesión",
+  "inputs": [
+    {
+      "type": "text",
+      "name": "",
+      "placeholder": "Nombre de usuario"
+    },
+    {
+      "type": "email",
+      "name": "",
+      "placeholder": "Email"
+    },
+    {
+      "type": "password",
+      "name": "",
+      "placeholder": "Contraseña"
+    },
+    {
+      "type": "password",
+      "name": "",
+      "placeholder": "Confirmar password"
+    }
+  ],
+  "errors": [],
+  "scope": "Public local UI render only; no account registered."
+}

@@ -1,0 +1,36 @@
+{
+  "checked_at": "2026-09-17T18:24:12.878511+00:00",
+  "source_head": "9310624f75d8e85b7fc31560ebd543a7a269ee69",
+  "placement_count": 2660,
+  "required_npc_ids": 172,
+  "json_seed_path": "api/src/jsons/npcs.json",
+  "json_seed_count": 339,
+  "full_database_count": 340,
+  "missing_from_json_seed": [
+    50
+  ],
+  "missing_from_full_dump": [],
+  "database_dump_sha256": "09f725a9980920a7f6ae53562ebd263dab965c407157292d53d02a3b864359fd",
+  "api_health": {
+    "status": 200,
+    "body": {
+      "ok": true
+    }
+  },
+  "game_health": {
+    "status": 200,
+    "body": {
+      "ok": true,
+      "serverReady": true
+    }
+  },
+  "public_map_baseline": {
+    "status": 200,
+    "body": {
+      "mapNum": 1,
+      "includeDrafts": false,
+      "overrides": [],
+      "entities": []
+    }
+  }
+}
