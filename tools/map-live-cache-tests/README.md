@@ -29,3 +29,34 @@ live game-server reload, player relocation, or renderer validation is complete.
 No campaign assignment or payment is claimed.
 
 Strict TypeScript 6.0.3 module check: `tsc -p tools/map-live-cache-tests/tsconfig.json`. This checks the actual loader and local imports, not the entire Next.js application.
+
+## Server reload and relocation regression coverage
+
+Run from the repository root after installing the server development dependencies:
+
+```sh
+TS_COMPILER_PATH="$(pwd)/server/node_modules/typescript/lib/typescript.js" \
+  node tools/map-live-cache-tests/server-regressions.mjs
+```
+
+These thirteen scenarios execute the actual `gameDataSync`, `mapLiveApply` and
+`mapLivePublish` modules. The harness also extracts and compiles the exact
+`game.ts` occupancy, terrain and `blockMap` implementations using TypeScript's
+syntax tree. API transport, connected clients and teleport delivery are local
+fixtures. It is module integration testing, not an end-to-end deployed game.
+
+Before this server follow-up: 5 passed, 8 failed. After it: 13 passed, 0 failed.
+
+The regressions establish that layered overrides share one tile-blocking
+baseline; removing edits or changing `blocked` to null restores that baseline;
+collision packets use actual terrain deltas rather than assuming missing edits
+mean open ground; an unchanged occupying player is not relocated; and a late
+older publication cannot overwrite a newer applied version. Positive controls
+cover actual wall relocation, other-map isolation, fetch errors, graphic-layer
+restoration and draft exclusion. Unrelated tile runtime fields are retained.
+
+The original author retains authorship of the live-publication feature. This
+follow-up corrects defects in that existing implementation; no full-bounty
+approval, payment, or real multiplayer deployment is claimed.
+
+Additional local verification: the full server TypeScript configuration passes with no emit; protocol compilation passes; all eight tests selected by the existing server test script pass. The ten previous client-loader regressions and strict client-loader typecheck also remain passing. Logs and exact commands are retained in the work evidence.

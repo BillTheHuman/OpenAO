@@ -529,7 +529,8 @@ async function initializeBalanceFromApi(): Promise<InitializeBalanceResult> {
 
 type BaseTileSnapshot = {
     blocked?: number;
-    graphicAtLayer?: number;
+    blockedCaptured: boolean;
+    graphics: Map<number, number | undefined>;
 };
 
 const baseTileSnapshots = new Map<number, Map<string, BaseTileSnapshot>>();
@@ -551,103 +552,71 @@ function getMapPublishVersion(mapNum: number): number {
 }
 
 function applyMapTileOverridesToVars(mapNum: number, overrides: MapTileOverride[]): number {
-    const { onlyPublishedOverrides, collectBlockedTileChanges } = require("./mapLivePublish") as typeof import("./mapLivePublish");
+    const { onlyPublishedOverrides } = require("./mapLivePublish") as typeof import("./mapLivePublish");
     const published = onlyPublishedOverrides(overrides);
+    if (!vars.mapa[mapNum]) return 0;
 
-    if (!vars.mapa[mapNum]) {
-        return 0;
-    }
+    if (!baseTileSnapshots.has(mapNum)) baseTileSnapshots.set(mapNum, new Map());
+    const snapshots = baseTileSnapshots.get(mapNum)!;
 
-    if (!baseTileSnapshots.has(mapNum)) {
-        baseTileSnapshots.set(mapNum, new Map());
-    }
-    const mapSnapshots = baseTileSnapshots.get(mapNum)!;
-    const previousOverrides = activeMapOverrides.get(mapNum) || [];
-    const currentKeys = new Set(published.map((o) => `${o.x},${o.y},${o.layer}`));
-
-    for (const prev of previousOverrides) {
-        const key = `${prev.x},${prev.y},${prev.layer}`;
-        if (currentKeys.has(key)) {
-            continue;
+    // Restore the original values before applying the next complete publication.
+    // Blocking belongs to a tile, not a graphic layer: layered snapshots would
+    // otherwise capture another override's blocked value as the original one.
+    for (const [key, snapshot] of snapshots) {
+        const [x, y] = key.split(",").map(Number);
+        const tile = vars.mapa[mapNum]?.[y]?.[x];
+        if (!tile) continue;
+        if (snapshot.blockedCaptured) {
+            if (snapshot.blocked === undefined) delete tile.blocked;
+            else tile.blocked = snapshot.blocked;
         }
-
-        const snapshot = mapSnapshots.get(key);
-        const tile = vars.mapa[mapNum]?.[prev.y]?.[prev.x];
-        if (!tile || !snapshot) {
-            continue;
-        }
-
-        if (snapshot.blocked !== undefined) {
-            tile.blocked = snapshot.blocked;
-        } else {
-            delete tile.blocked;
-        }
-
-        if (snapshot.graphicAtLayer !== undefined) {
-            if (!tile.graphics || typeof tile.graphics !== "object") {
-                tile.graphics = {};
-            }
-            (tile.graphics as Record<number, number>)[prev.layer] = snapshot.graphicAtLayer;
-        } else if (tile.graphics && typeof tile.graphics === "object") {
-            delete (tile.graphics as Record<number, number>)[prev.layer];
-            if (Object.keys(tile.graphics).length === 0) {
-                delete tile.graphics;
+        for (const [layer, graphic] of snapshot.graphics) {
+            if (graphic === undefined) {
+                if (tile.graphics) delete tile.graphics[layer];
+            } else {
+                tile.graphics ??= {};
+                tile.graphics[layer] = graphic;
             }
         }
-        mapSnapshots.delete(key);
+        if (tile.graphics && Object.keys(tile.graphics).length === 0) delete tile.graphics;
     }
 
-    let applied = 0;
-    for (const override of published) {
-        const { x, y, layer, grhIndex, blocked } = override;
-        if (!vars.mapa[mapNum][y]) {
-            vars.mapa[mapNum][y] = {};
-        }
-        if (!vars.mapa[mapNum][y][x]) {
-            vars.mapa[mapNum][y][x] = {};
-        }
-
+    const activeKeys = new Set<string>();
+    // Capture every affected layer before any new override mutates its tile.
+    for (const { x, y, layer, blocked } of published) {
+        vars.mapa[mapNum][y] ??= {};
+        vars.mapa[mapNum][y][x] ??= {};
         const tile = vars.mapa[mapNum][y][x];
-        const key = `${x},${y},${layer}`;
-
-        if (!mapSnapshots.has(key)) {
-            mapSnapshots.set(key, {
-                blocked: tile.blocked,
-                graphicAtLayer:
-                    tile.graphics && typeof tile.graphics === "object"
-                        ? (tile.graphics as Record<number, number>)[layer]
-                        : undefined,
-            });
+        const key = `${x},${y}`;
+        activeKeys.add(key);
+        let snapshot = snapshots.get(key);
+        if (!snapshot) {
+            snapshot = { blockedCaptured: false, graphics: new Map() };
+            snapshots.set(key, snapshot);
         }
-
-        if (blocked !== null && blocked !== undefined) {
-            if (blocked) {
-                tile.blocked = 1;
-            } else {
-                delete tile.blocked;
-            }
+        if (blocked != null && !snapshot.blockedCaptured) {
+            snapshot.blocked = tile.blocked;
+            snapshot.blockedCaptured = true;
         }
-
-        if (grhIndex !== undefined) {
-            if (!tile.graphics || typeof tile.graphics !== "object") {
-                tile.graphics = {};
-            }
-            if (grhIndex === null || grhIndex === 0) {
-                delete (tile.graphics as Record<number, number>)[layer];
-                if (Object.keys(tile.graphics).length === 0) {
-                    delete tile.graphics;
-                }
-            } else {
-                (tile.graphics as Record<number, number>)[layer] = grhIndex;
-            }
-        }
-        applied += 1;
+        if (!snapshot.graphics.has(layer)) snapshot.graphics.set(layer, tile.graphics?.[layer]);
     }
+    for (const key of snapshots.keys()) if (!activeKeys.has(key)) snapshots.delete(key);
 
-    // collectBlockedTileChanges is imported for callers; keep previous for diff
-    void collectBlockedTileChanges;
+    for (const { x, y, layer, grhIndex, blocked } of published) {
+        const tile = vars.mapa[mapNum][y][x];
+        if (blocked != null) {
+            if (blocked) tile.blocked = 1;
+            else delete tile.blocked;
+        }
+        if (grhIndex !== undefined) {
+            tile.graphics ??= {};
+            if (grhIndex === null || grhIndex === 0) delete tile.graphics[layer];
+            else tile.graphics[layer] = grhIndex;
+            if (Object.keys(tile.graphics).length === 0) delete tile.graphics;
+        }
+    }
     activeMapOverrides.set(mapNum, [...published]);
-    return applied;
+    return published.length;
 }
 
 async function initializeMapsFromApi(): Promise<InitializeMapsResult> {
@@ -688,26 +657,32 @@ async function initializeMapsFromApi(): Promise<InitializeMapsResult> {
 }
 
 async function reloadMapDiff(mapNum: number): Promise<ReloadMapDiffResult> {
-    const { collectBlockedTileChanges, onlyPublishedOverrides } = require("./mapLivePublish") as typeof import("./mapLivePublish");
-    const previousOverrides = getActiveMapOverrides(mapNum);
+    const { onlyPublishedOverrides } = require("./mapLivePublish") as typeof import("./mapLivePublish");
     const result = (await funct.fetchUrl(`/internal/game-data/maps/${mapNum}/overrides`, {
-        headers: {
-            Authorization: vars.tokenAuth,
-        },
+        headers: { Authorization: vars.tokenAuth },
     })) as { mapNum: number; overrides: MapTileOverride[]; version?: number };
 
-    const overrides = onlyPublishedOverrides(result.overrides ?? []);
-    const appliedOverrides = applyMapTileOverridesToVars(mapNum, overrides);
+    // The request may have overlapped a newer publication. Read the active
+    // state after awaiting transport and never apply a lower published version.
+    const previousOverrides = getActiveMapOverrides(mapNum);
     const version = Number(result.version ?? Date.now());
+    const currentVersion = getMapPublishVersion(mapNum);
+    if (version < currentVersion) {
+        return { mapNum, appliedOverrides: 0, version: currentVersion, blockedChanges: [], previousOverrides };
+    }
+    const overrides = onlyPublishedOverrides(result.overrides ?? []);
+    const before = new Map<string, { x: number; y: number; blocked: boolean }>();
+    for (const { x, y } of [...previousOverrides, ...overrides]) {
+        before.set(`${x},${y}`, { x, y, blocked: Boolean(vars.mapa[mapNum]?.[y]?.[x]?.blocked) });
+    }
+    const appliedOverrides = applyMapTileOverridesToVars(mapNum, overrides);
+    const blockedChanges: ReloadMapDiffResult["blockedChanges"] = [];
+    for (const previous of before.values()) {
+        const blocked = Boolean(vars.mapa[mapNum]?.[previous.y]?.[previous.x]?.blocked);
+        if (blocked !== previous.blocked) blockedChanges.push({ x: previous.x, y: previous.y, blocked });
+    }
     mapPublishVersions.set(mapNum, version);
-
-    return {
-        mapNum,
-        appliedOverrides,
-        version,
-        blockedChanges: collectBlockedTileChanges(previousOverrides, overrides),
-        previousOverrides,
-    };
+    return { mapNum, appliedOverrides, version, blockedChanges, previousOverrides };
 }
 
 async function reloadMapsDiff(): Promise<ReloadMapsResult> {

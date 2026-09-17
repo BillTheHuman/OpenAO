@@ -27,9 +27,9 @@ export type ApplyPublishedMapResult = {
     blockedChanges: number;
 };
 
-function isPlayerTileWalkable(mapNum: number, x: number, y: number, navegando: boolean): boolean {
+function isPlayerTileWalkable(mapNum: number, x: number, y: number, navegando: boolean, ignoreOccupantId?: number | string): boolean {
     try {
-        return Boolean(game.legalPos(x, y, mapNum, Boolean(navegando)));
+        return Boolean(game.legalPos(x, y, mapNum, Boolean(navegando), ignoreOccupantId));
     } catch {
         return false;
     }
@@ -46,13 +46,13 @@ function relocateIfTrapped(user: Record<string, any>): boolean {
     const y = Number(pos.y ?? 0);
     const navegando = Boolean(user.navegando);
 
-    if (isPlayerTileWalkable(mapNum, x, y, navegando)) {
+    if (isPlayerTileWalkable(mapNum, x, y, navegando, user.id)) {
         return false;
     }
 
     const nearest = findNearestWalkableTile(
         { x, y },
-        (nx, ny) => isPlayerTileWalkable(mapNum, nx, ny, navegando),
+        (nx, ny) => isPlayerTileWalkable(mapNum, nx, ny, navegando, user.id),
     );
 
     if (!nearest) {
