@@ -32,7 +32,9 @@ export async function handleIncomingUiPacket({
             if (liveReload) {
                 invalidateMapCache(liveReload.mapNum);
                 if (engine?.mapData && engine.mapNumber === liveReload.mapNum) {
-                    void refreshMapOverridesInPlace(engine.mapData, liveReload.mapNum);
+                    void refreshMapOverridesInPlace(engine.mapData, liveReload.mapNum).catch((error) => {
+                        console.warn("Published map refresh failed; retaining current terrain", error);
+                    });
                 } else if (engine?.mapData) {
                     // Still drop cache for that map even if the player already left.
                     invalidateMapCache(liveReload.mapNum);

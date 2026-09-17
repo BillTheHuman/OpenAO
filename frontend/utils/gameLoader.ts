@@ -51,15 +51,19 @@ const jsonRequestCache = new Map<string, Promise<unknown>>();
 const jsonValueCache = new Map<string, unknown>();
 const mapRequestCache = new Map<number, Promise<MapData>>();
 const mapValueCache = new Map<number, MapData>();
+const mapCacheGenerations = new Map<number, object>();
+const mapRefreshGenerations = new WeakMap<MapData, Map<number, object>>();
 
 /** Drop one map (or all) from the client cache so the next loadMapData refetches overrides. */
 export function invalidateMapCache(mapNumber?: number): void {
     if (typeof mapNumber === "number") {
+        mapCacheGenerations.set(mapNumber, {});
         mapValueCache.delete(mapNumber);
         mapRequestCache.delete(mapNumber);
         return;
     }
 
+    mapCacheGenerations.clear();
     mapValueCache.clear();
     mapRequestCache.clear();
 }
@@ -630,129 +634,149 @@ export async function loadObjectsDB(): Promise<ObjectsDB> {
  */
 export async function loadMapData(mapNumber: number): Promise<MapData> {
     const cachedMap = mapValueCache.get(mapNumber);
-    if (cachedMap) {
-        return cloneMapData(cachedMap);
-    }
-
+    if (cachedMap) return cloneMapData(cachedMap);
     const pendingRequest = mapRequestCache.get(mapNumber);
-    if (pendingRequest) {
-        return pendingRequest.then((mapData) => cloneMapData(mapData));
-    }
+    if (pendingRequest) return pendingRequest.then(cloneMapData);
 
-    const requestPromise = (async () => {
-        try {
-            const dynamicBaseMapNumber = getBaseMapIdFromDynamicInstance(mapNumber);
-            if (
-                dynamicBaseMapNumber &&
-                dynamicBaseMapNumber >= 500 &&
-                dynamicBaseMapNumber < 600
-            ) {
-                const data = await fetchJsonWithFallback<MapData>(
-                    `/static/maps_local/mapa_${dynamicBaseMapNumber}.json`,
-                    `/static/maps_local/mapa_${dynamicBaseMapNumber}.json`,
-                    `local map ${dynamicBaseMapNumber}`,
-                    { preferLocal: true },
-                );
-                const remappedData = remapMapDataKey(
-                    data,
-                    dynamicBaseMapNumber,
-                    mapNumber,
-                );
-                mapValueCache.set(mapNumber, remappedData);
-                return remappedData;
-            }
+    const generation = mapCacheGenerations.get(mapNumber) ?? {};
+    mapCacheGenerations.set(mapNumber, generation);
+    const requestPromise = loadMapBaseData(mapNumber).then(async (mapData) => {
+        const dynamicBase = getBaseMapIdFromDynamicInstance(mapNumber);
+        const localMap = mapNumber >= 500 && mapNumber < 600;
+        const challengeMap = mapNumber >= CHALLENGE_INSTANCE_MAP_START &&
+            mapNumber < DYNAMIC_INSTANCE_MAP_START;
+        if (!dynamicBase && !localMap && !challengeMap) {
+            await applyMapOverrides(mapData, mapNumber);
+        }
+        if (mapCacheGenerations.get(mapNumber) !== generation) {
+            return loadMapData(mapNumber);
+        }
+        mapValueCache.set(mapNumber, mapData);
+        return mapData;
+    }).catch((error) => {
+        if (mapCacheGenerations.get(mapNumber) !== generation) {
+            return loadMapData(mapNumber);
+        }
+        throw error;
+    }).finally(() => {
+        // An obsolete request must not remove its replacement from the cache.
+        if (mapRequestCache.get(mapNumber) === requestPromise) {
+            mapRequestCache.delete(mapNumber);
+        }
+    });
+    mapRequestCache.set(mapNumber, requestPromise);
+    return requestPromise.then(cloneMapData);
+}
 
-            if (dynamicBaseMapNumber) {
-                const data = await fetchJsonWithFallback<MapData>(
-                    withMapAssetVersion(
-                        `/maps/mapa_${dynamicBaseMapNumber}.json`,
-                        dynamicBaseMapNumber,
-                    ),
-                    withMapAssetVersion(
-                        `/maps_optimized/mapa_${dynamicBaseMapNumber}.json`,
-                        dynamicBaseMapNumber,
-                    ),
-                    `map ${dynamicBaseMapNumber}`,
-                    {
-                        preferLocal: false,
-                    },
-                );
-                const remappedData = remapMapDataKey(
-                    decompressMap(data),
-                    dynamicBaseMapNumber,
-                    mapNumber,
-                );
-                mapValueCache.set(mapNumber, remappedData);
-                return remappedData;
-            }
+/** Load a detached baseline, without mutating static asset caches or applying overrides. */
+async function loadMapBaseData(mapNumber: number): Promise<MapData> {
+    try {
+        const dynamicBaseMapNumber = getBaseMapIdFromDynamicInstance(mapNumber);
+        if (
+            dynamicBaseMapNumber &&
+            dynamicBaseMapNumber >= 500 &&
+            dynamicBaseMapNumber < 600
+        ) {
+            const data = await fetchJsonWithFallback<MapData>(
+                `/static/maps_local/mapa_${dynamicBaseMapNumber}.json`,
+                `/static/maps_local/mapa_${dynamicBaseMapNumber}.json`,
+                `local map ${dynamicBaseMapNumber}`,
+                { preferLocal: true },
+            );
+            const remappedData = remapMapDataKey(
+                cloneMapData(data),
+                dynamicBaseMapNumber,
+                mapNumber,
+            );
 
-            if (mapNumber >= 500 && mapNumber < 600) {
-                const localMapData = await fetchJsonWithFallback<MapData>(
-                    `/static/maps_local/mapa_${mapNumber}.json`,
-                    `/static/maps_local/mapa_${mapNumber}.json`,
-                    `local map ${mapNumber}`,
-                    { preferLocal: true },
-                );
-                mapValueCache.set(mapNumber, localMapData);
-                return localMapData;
-            }
+            return remappedData;
+        }
 
-            if (
-                mapNumber >= CHALLENGE_INSTANCE_MAP_START &&
-                mapNumber < DYNAMIC_INSTANCE_MAP_START
-            ) {
-                const challengeMapData = await fetchJsonWithFallback<MapData>(
-                    `/static/maps_local/mapa_${CHALLENGE_INSTANCE_BASE_MAP_ID}.json`,
-                    `/static/maps_local/mapa_${CHALLENGE_INSTANCE_BASE_MAP_ID}.json`,
-                    `challenge map ${CHALLENGE_INSTANCE_BASE_MAP_ID}`,
-                    { preferLocal: true },
-                );
-                const remappedData = remapMapDataKey(
-                    challengeMapData,
-                    CHALLENGE_INSTANCE_BASE_MAP_ID,
-                    mapNumber,
-                );
-                mapValueCache.set(mapNumber, remappedData);
-                return remappedData;
-            }
-
-            const assetMapNumber = dynamicBaseMapNumber
-                ? dynamicBaseMapNumber
-                : mapNumber >= 1000
-                  ? 272
-                  : mapNumber;
+        if (dynamicBaseMapNumber) {
             const data = await fetchJsonWithFallback<MapData>(
                 withMapAssetVersion(
-                    `/maps/mapa_${assetMapNumber}.json`,
-                    assetMapNumber,
+                    `/maps/mapa_${dynamicBaseMapNumber}.json`,
+                    dynamicBaseMapNumber,
                 ),
                 withMapAssetVersion(
-                    `/maps_optimized/mapa_${assetMapNumber}.json`,
-                    assetMapNumber,
+                    `/maps_optimized/mapa_${dynamicBaseMapNumber}.json`,
+                    dynamicBaseMapNumber,
                 ),
-                `map ${assetMapNumber}`,
+                `map ${dynamicBaseMapNumber}`,
                 {
                     preferLocal: false,
                 },
             );
-            const decompressedData = remapMapDataKey(
-                decompressMap(data),
-                assetMapNumber,
+            const remappedData = remapMapDataKey(
+                decompressMap(cloneMapData(data)),
+                dynamicBaseMapNumber,
                 mapNumber,
             );
-            await applyMapOverrides(decompressedData, mapNumber);
-            mapValueCache.set(mapNumber, decompressedData);
-            return decompressedData;
-        } catch (error) {
-            console.error(`Error loading map ${mapNumber}:`, error);
-            throw error;
-        }
-    })().finally(() => {
-        mapRequestCache.delete(mapNumber);
-    });
 
-    mapRequestCache.set(mapNumber, requestPromise);
-    return requestPromise.then((mapData) => cloneMapData(mapData));
+            return remappedData;
+        }
+
+        if (mapNumber >= 500 && mapNumber < 600) {
+            const localMapData = await fetchJsonWithFallback<MapData>(
+                `/static/maps_local/mapa_${mapNumber}.json`,
+                `/static/maps_local/mapa_${mapNumber}.json`,
+                `local map ${mapNumber}`,
+                { preferLocal: true },
+            );
+
+            return cloneMapData(localMapData);
+        }
+
+        if (
+            mapNumber >= CHALLENGE_INSTANCE_MAP_START &&
+            mapNumber < DYNAMIC_INSTANCE_MAP_START
+        ) {
+            const challengeMapData = await fetchJsonWithFallback<MapData>(
+                `/static/maps_local/mapa_${CHALLENGE_INSTANCE_BASE_MAP_ID}.json`,
+                `/static/maps_local/mapa_${CHALLENGE_INSTANCE_BASE_MAP_ID}.json`,
+                `challenge map ${CHALLENGE_INSTANCE_BASE_MAP_ID}`,
+                { preferLocal: true },
+            );
+            const remappedData = remapMapDataKey(
+                challengeMapData,
+                CHALLENGE_INSTANCE_BASE_MAP_ID,
+                mapNumber,
+            );
+
+            return remappedData;
+        }
+
+        const assetMapNumber = dynamicBaseMapNumber
+            ? dynamicBaseMapNumber
+            : mapNumber >= 1000
+              ? 272
+              : mapNumber;
+        const data = await fetchJsonWithFallback<MapData>(
+            withMapAssetVersion(
+                `/maps/mapa_${assetMapNumber}.json`,
+                assetMapNumber,
+            ),
+            withMapAssetVersion(
+                `/maps_optimized/mapa_${assetMapNumber}.json`,
+                assetMapNumber,
+            ),
+            `map ${assetMapNumber}`,
+            {
+                preferLocal: false,
+            },
+        );
+        const decompressedData = remapMapDataKey(
+            decompressMap(cloneMapData(data)),
+            assetMapNumber,
+            mapNumber,
+        );
+
+        return decompressedData;
+    } catch (error) {
+        console.error(`Error loading map ${mapNumber}:`, error);
+        throw error;
+    }
+
 }
 
 /**
@@ -788,6 +812,7 @@ type MapTileOverride = {
 async function applyMapOverrides(
     mapData: MapData,
     mapNumber: number,
+    requireSuccess = false,
 ): Promise<void> {
     try {
         const response = await fetch(
@@ -796,6 +821,7 @@ async function applyMapOverrides(
         );
 
         if (!response.ok) {
+            if (requireSuccess) throw new Error(`Map overrides HTTP ${response.status}`);
             return;
         }
 
@@ -804,6 +830,7 @@ async function applyMapOverrides(
         };
 
         const overrides = payload.overrides ?? [];
+        if (!Array.isArray(overrides)) throw new Error("Invalid map override response");
 
         if (overrides.length === 0) {
             return;
@@ -847,6 +874,7 @@ async function applyMapOverrides(
             `[MAPA] ${overrides.length} tiles editados aplicados al mapa ${mapNumber}.`,
         );
     } catch (error) {
+        if (requireSuccess) throw error;
         console.warn(
             `[MAPA] No se pudieron aplicar los tiles editados del mapa ${mapNumber}:`,
             error,
@@ -865,11 +893,45 @@ export async function refreshMapOverridesInPlace(
     mapData: MapData,
     mapNumber: number,
 ): Promise<number> {
+    let versions = mapRefreshGenerations.get(mapData);
+    if (!versions) {
+        versions = new Map<number, object>();
+        mapRefreshGenerations.set(mapData, versions);
+    }
+    const generation = {};
+    versions.set(mapNumber, generation);
     invalidateMapCache(mapNumber);
-    const before = JSON.stringify(mapData[String(mapNumber)] ?? mapData[mapNumber] ?? null);
-    await applyMapOverrides(mapData, mapNumber);
-    const after = JSON.stringify(mapData[String(mapNumber)] ?? mapData[mapNumber] ?? null);
-    return before === after ? 0 : 1;
+
+    // Reapply to a clean static baseline so removed overrides are restored too.
+    // Nothing touches the displayed map until the entire request succeeds.
+    const fresh = await loadMapBaseData(mapNumber);
+    await applyMapOverrides(fresh, mapNumber, true);
+    if (versions.get(mapNumber) !== generation) return 0;
+    const current = mapData[String(mapNumber)];
+    const next = fresh[String(mapNumber)];
+    if (!current || !next) return 0;
+    const before = JSON.stringify(current);
+    for (const y of Object.keys(next)) {
+        if (!/^[1-9]\d*$/.test(y)) continue;
+        const nextRow = next[y];
+        if (!nextRow || typeof nextRow !== "object") continue;
+        if (!current[y]) current[y] = structuredClone(nextRow);
+        for (const x of Object.keys(nextRow)) {
+            if (!/^[1-9]\d*$/.test(x)) continue;
+            const nextTile = nextRow[x];
+            if (!nextTile || typeof nextTile !== "object") continue;
+            const tile = current[y][x];
+            if (!tile) { current[y][x] = structuredClone(nextTile); continue; }
+            // Keep live tile identities and unrelated runtime fields intact.
+            if (nextTile.graphics === undefined) delete tile.graphics;
+            else tile.graphics = structuredClone(nextTile.graphics);
+            if (nextTile.blocked === undefined) delete tile.blocked;
+            else tile.blocked = nextTile.blocked;
+        }
+    }
+    invalidateMapCache(mapNumber);
+    mapValueCache.set(mapNumber, fresh);
+    return before === JSON.stringify(current) ? 0 : 1;
 }
 
 export function getTexturePath(graphicData: GraphicData): string {
