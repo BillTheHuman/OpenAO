@@ -32,9 +32,20 @@ export async function handleIncomingUiPacket({
             if (liveReload) {
                 invalidateMapCache(liveReload.mapNum);
                 if (engine?.mapData && engine.mapNumber === liveReload.mapNum) {
-                    void refreshMapOverridesInPlace(engine.mapData, liveReload.mapNum).catch((error) => {
-                        console.warn("Published map refresh failed; retaining current terrain", error);
-                    });
+                    try {
+                        let changedTiles: Array<{ x: number; y: number }> = [];
+                        await refreshMapOverridesInPlace(
+                            engine.mapData,
+                            liveReload.mapNum,
+                            (tiles) => { changedTiles = tiles; },
+                        );
+                        // The retained Pixi scene does not observe mapData mutations.
+                        if (!engine.isDestroyed && engine.mapNumber === liveReload.mapNum && changedTiles.length > 0) {
+                            await ctx.redrawMapTiles(engine, changedTiles);
+                        }
+                    } catch (error) {
+                        console.warn("Published map refresh/redraw failed", error);
+                    }
                 } else if (engine?.mapData) {
                     // Still drop cache for that map even if the player already left.
                     invalidateMapCache(liveReload.mapNum);

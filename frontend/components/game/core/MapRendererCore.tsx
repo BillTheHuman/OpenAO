@@ -1174,6 +1174,7 @@ export default function MapRenderer({
         queueTileObjectVisualSync,
         removeObjectSprite,
         renderMap,
+        redrawMapTiles,
         setWorldVisibility,
         startMapChangeTransition,
         updatePendingTileState,
@@ -1780,6 +1781,7 @@ export default function MapRenderer({
             disconnectSocket: () => void;
         }) => {
             await handleIncomingGamePacket(packet, engine, renderedMapNumber, {
+                redrawMapTiles,
                 pendingUserSnapshotRef,
                 lastServerConfirmedSelfPositionRef,
                 latestServerStateVersionRef,
@@ -1868,6 +1870,7 @@ export default function MapRenderer({
         emitStatus,
         emitTradeState,
         ensureMapTile,
+        redrawMapTiles,
         flushBufferedRemoteEntities,
         lockMovementInput,
         mergeHud,

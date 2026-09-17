@@ -1,0 +1,14 @@
+PASS normal loads are cloned and cached
+PASS late obsolete load cannot replace newer map or reach its original caller
+PASS old finalizer does not evict a replacement request
+PASS clearMapCache invalidates in-flight generations
+PASS removed overrides restore original graphics and blocking
+PASS out-of-order refresh cannot repaint stale terrain
+PASS failed refresh retains current terrain and reports failure
+PASS live map, row and tile references survive refresh
+PASS unchanged refresh reports no visible terrain difference
+PASS ordinary first-load fallback remains available
+RESULT passed=10 failed=0
+(node:783036) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:783036) ExperimentalWarning: VM Modules is an experimental feature and might change at any time

@@ -1,0 +1,33 @@
+FAIL live marker redraws the exact changed tiles after refresh: Expected values to be strictly equal:
++ actual - expected
+
++ '[]'
+- '[{"x":3,"y":4}]'
+
+FAIL packet handling waits for refresh and scene redraw: Expected values to be strictly equal:
+
+true !== false
+
+PASS unchanged map needs no scene redraw
+PASS destroyed engine is not redrawn after asynchronous refresh
+FAIL removed graphic layers and roof leave no stale display objects: Expected values to be strictly equal:
+
+3 !== 0
+
+FAIL replacement preserves nonselected layers: Expected values to be strictly equal:
+
+true !== false
+
+FAIL changed floor is replaced with the published graphic: Expected values to be strictly equal:
+
+true !== false
+
+PASS failed texture preload leaves old scene objects intact
+FAIL loader reports changed coordinates without replacing live tile references: Expected values to be strictly equal:
+
+0 !== 1
+
+RESULT passed=3 failed=6
+(node:783001) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:783001) ExperimentalWarning: VM Modules is an experimental feature and might change at any time

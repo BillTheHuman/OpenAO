@@ -1,0 +1,56 @@
+{
+  "at": "2026-09-17T20:03:21.723Z",
+  "draftInvisible": true,
+  "publication": {
+    "published": 2,
+    "publishedEntities": 0,
+    "version": 1789675237943,
+    "liveReload": {
+      "notified": true,
+      "skipped": false,
+      "result": {
+        "mapNum": 1,
+        "appliedOverrides": 2,
+        "version": 1789675237943,
+        "relocatedPlayers": 1,
+        "notifiedPlayers": 2,
+        "blockedChanges": 1
+      }
+    }
+  },
+  "positions": [
+    "Mapa 1 (48, 59)",
+    "Mapa 1 (50, 59)"
+  ],
+  "sameGamePid": 752630,
+  "newOverrideFetches": [
+    [
+      {
+        "at": 1789675238306,
+        "url": "http://127.0.0.1:46861/maps/1/overrides",
+        "status": 200
+      }
+    ],
+    [
+      {
+        "at": 1789675238135,
+        "url": "http://127.0.0.1:46861/maps/1/overrides",
+        "status": 200
+      }
+    ]
+  ],
+  "renderedTileChanged": false,
+  "socketCounts": [
+    [
+      {
+        "closed": false
+      }
+    ],
+    [
+      {
+        "closed": false
+      }
+    ]
+  ],
+  "scope": "Actual two-client local session: network/model refresh works but tested floor pixels did not redraw."
+}

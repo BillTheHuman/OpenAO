@@ -1,0 +1,18 @@
+▶ mapLivePublish helpers (OpenAO #11)
+  ✔ formats and parses the live-reload console marker (2.656495ms)
+  ✔ finds the nearest walkable tile when the player stands on a new wall (0.555505ms)
+  ✔ returns null when no walkable tile exists in radius (0.291257ms)
+  ✔ strips draft overrides so players never see in-progress edits (0.307943ms)
+  ✔ collects blocked tile deltas for client blockMap updates (0.542626ms)
+✔ mapLivePublish helpers (OpenAO #11) (6.667648ms)
+✔ resets characters before closing clients and exiting (3.652045ms)
+✔ exits when the reset API does not respond (10.990972ms)
+✔ handles repeated signals only once (0.809097ms)
+ℹ tests 8
+ℹ suites 1
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 576.917251

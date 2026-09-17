@@ -1,0 +1,38 @@
+{
+  "at": "2026-09-17T20:15:25.309617+00:00",
+  "checks": [
+    {
+      "name": "server-integration",
+      "exit": 0,
+      "command": [
+        "/run/media/the0m/Storage-1/toys/coffee-break-bounties-20260917T053045Z/tool-home/node-v24.21.0-linux-x64/bin/node",
+        "tools/map-live-cache-tests/server-regressions.mjs"
+      ],
+      "cwd": "."
+    },
+    {
+      "name": "server-original",
+      "exit": 0,
+      "command": [
+        "/run/media/the0m/Storage-1/toys/coffee-break-bounties-20260917T053045Z/tool-home/node-v24.21.0-linux-x64/bin/node",
+        "node_modules/tsx/dist/cli.mjs",
+        "--test",
+        "tests/**/*.test.ts",
+        "src/tests/**/*.test.ts"
+      ],
+      "cwd": "server"
+    },
+    {
+      "name": "server-typecheck",
+      "exit": 0,
+      "command": [
+        "/run/media/the0m/Storage-1/toys/coffee-break-bounties-20260917T053045Z/tool-home/node-v24.21.0-linux-x64/bin/node",
+        "node_modules/typescript/bin/tsc",
+        "-p",
+        "tsconfig.json",
+        "--noEmit"
+      ],
+      "cwd": "server"
+    }
+  ]
+}

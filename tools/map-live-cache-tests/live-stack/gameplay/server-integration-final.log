@@ -1,0 +1,14 @@
+PASS single deleted edit restores original graphics and blocking
+PASS removing two layers restores the pre-edit blocking value
+PASS changing blocked=true to null restores original terrain
+PASS restoring an original wall never broadcasts a false unblock
+PASS removing a temporary unblock broadcasts the restored wall
+PASS unmodified publication does not relocate the occupying player
+PASS new wall relocates the trapped player to a free neighbor
+PASS players on other maps receive no reload or relocation
+PASS fetch failure preserves current map and surfaces the error
+PASS deleted graphic layer can be restored without touching other fields
+PASS draft-only update removes old edits without applying the draft
+PASS out-of-order older version cannot replace the latest publication
+PASS unchanged blocked terrain yields no unnecessary collision packet
+RESULT passed=13 failed=0

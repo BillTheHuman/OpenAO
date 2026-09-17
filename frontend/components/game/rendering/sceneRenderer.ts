@@ -658,6 +658,7 @@ export async function renderMap(
         includeObjects?: boolean;
         bounds?: TileBounds;
         excludeBounds?: TileBounds;
+        replaceLayers?: boolean;
     },
 ): Promise<void> {
     if (
@@ -716,6 +717,14 @@ export async function renderMap(
 
             const tile = getTileAt(engine.mapData, mapNumber, x, y);
             const tileKey = `${x},${y}`;
+
+            // Clear removed layers as well as changed ones, after preload succeeds.
+            if (options?.replaceLayers) {
+                if (includedLayers.has("1")) removeSceneLayerSprite(engine, `layer1:${tileKey}`);
+                if (includedLayers.has("2")) removeSceneLayerSprite(engine, `layer2:${tileKey}`);
+                if (includedLayers.has("3")) removeSceneLayerSprite(engine, `layer3:${tileKey}`, tileKey);
+                if (includedLayers.has("4")) removeRoofSpritesForTile(engine, tileKey);
+            }
 
             if (!tile?.graphics) {
                 continue;

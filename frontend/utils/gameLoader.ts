@@ -892,6 +892,7 @@ async function applyMapOverrides(
 export async function refreshMapOverridesInPlace(
     mapData: MapData,
     mapNumber: number,
+    onTilesChanged?: (tiles: Array<{ x: number; y: number }>) => void,
 ): Promise<number> {
     let versions = mapRefreshGenerations.get(mapData);
     if (!versions) {
@@ -902,36 +903,46 @@ export async function refreshMapOverridesInPlace(
     versions.set(mapNumber, generation);
     invalidateMapCache(mapNumber);
 
-    // Reapply to a clean static baseline so removed overrides are restored too.
-    // Nothing touches the displayed map until the entire request succeeds.
+    // Do not touch the displayed model until the full refresh succeeds.
     const fresh = await loadMapBaseData(mapNumber);
     await applyMapOverrides(fresh, mapNumber, true);
     if (versions.get(mapNumber) !== generation) return 0;
     const current = mapData[String(mapNumber)];
     const next = fresh[String(mapNumber)];
     if (!current || !next) return 0;
-    const before = JSON.stringify(current);
-    for (const y of Object.keys(next)) {
-        if (!/^[1-9]\d*$/.test(y)) continue;
-        const nextRow = next[y];
-        if (!nextRow || typeof nextRow !== "object") continue;
-        if (!current[y]) current[y] = structuredClone(nextRow);
-        for (const x of Object.keys(nextRow)) {
-            if (!/^[1-9]\d*$/.test(x)) continue;
+    const changed: Array<{ x: number; y: number }> = [];
+    const numericKey = /^[1-9]\d*$/;
+    for (const y of new Set([...Object.keys(current), ...Object.keys(next)])) {
+        if (!numericKey.test(y)) continue;
+        const nextRow = next[y] ?? {};
+        const currentRow = (current[y] ??= {});
+        for (const x of new Set([...Object.keys(currentRow), ...Object.keys(nextRow)])) {
+            if (!numericKey.test(x)) continue;
             const nextTile = nextRow[x];
-            if (!nextTile || typeof nextTile !== "object") continue;
-            const tile = current[y][x];
-            if (!tile) { current[y][x] = structuredClone(nextTile); continue; }
-            // Keep live tile identities and unrelated runtime fields intact.
-            if (nextTile.graphics === undefined) delete tile.graphics;
+            const tile = currentRow[x];
+            if (!tile) {
+                if (nextTile) {
+                    currentRow[x] = structuredClone(nextTile);
+                    changed.push({ x: Number(x), y: Number(y) });
+                }
+                continue;
+            }
+            const beforeGraphics = JSON.stringify(tile.graphics);
+            const beforeBlocked = tile.blocked;
+            // Preserve live tile identities, objects and other runtime fields.
+            if (nextTile?.graphics === undefined) delete tile.graphics;
             else tile.graphics = structuredClone(nextTile.graphics);
-            if (nextTile.blocked === undefined) delete tile.blocked;
+            if (nextTile?.blocked === undefined) delete tile.blocked;
             else tile.blocked = nextTile.blocked;
+            if (beforeGraphics !== JSON.stringify(tile.graphics) || beforeBlocked !== tile.blocked) {
+                changed.push({ x: Number(x), y: Number(y) });
+            }
         }
     }
     invalidateMapCache(mapNumber);
     mapValueCache.set(mapNumber, fresh);
-    return before === JSON.stringify(current) ? 0 : 1;
+    if (changed.length > 0) onTilesChanged?.(changed);
+    return changed.length > 0 ? 1 : 0;
 }
 
 export function getTexturePath(graphicData: GraphicData): string {

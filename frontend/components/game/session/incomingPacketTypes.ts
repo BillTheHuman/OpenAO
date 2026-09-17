@@ -10,6 +10,7 @@ import type {
 type MutableRef<T> = { current: T };
 
 export type IncomingPacketHandlerContext = {
+    redrawMapTiles: (engine: any, tiles: Array<{ x: number; y: number }>) => Promise<void>;
     pendingUserSnapshotRef: MutableRef<any>;
     lastServerConfirmedSelfPositionRef: MutableRef<any>;
     latestServerStateVersionRef: MutableRef<number>;

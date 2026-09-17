@@ -1,0 +1,13 @@
+PASS live marker redraws the exact changed tiles after refresh
+PASS packet handling waits for refresh and scene redraw
+PASS unchanged map needs no scene redraw
+PASS destroyed engine is not redrawn after asynchronous refresh
+PASS removed graphic layers and roof leave no stale display objects
+PASS replacement preserves nonselected layers
+PASS changed floor is replaced with the published graphic
+PASS failed texture preload leaves old scene objects intact
+PASS loader reports changed coordinates without replacing live tile references
+RESULT passed=9 failed=0
+(node:783028) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:783028) ExperimentalWarning: VM Modules is an experimental feature and might change at any time

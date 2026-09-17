@@ -1,0 +1,39 @@
+{
+  "checked_at": "2026-09-17T20:16:46.264077+00:00",
+  "component_checks": {
+    "client_cache": 10,
+    "render_regressions_before": {
+      "pass": 3,
+      "fail": 6
+    },
+    "render_regressions_after": {
+      "pass": 9,
+      "fail": 0
+    },
+    "server_integration": 13,
+    "existing_server_tests": 8,
+    "full_frontend_typecheck_exit": 0,
+    "full_server_typecheck_exit": 0
+  },
+  "full_stack": {
+    "passed": true,
+    "assertions": 19,
+    "clients": 2,
+    "started": "2026-09-17T20:11:55.308Z",
+    "finished": "2026-09-17T20:13:21.339Z",
+    "database": "isolated seeded PostgreSQL",
+    "frontend_mode": "Next.js development webpack",
+    "renderer": "Chromium SwiftShader",
+    "production_service_touched": false
+  },
+  "tested_source_sha256": {
+    "frontend/utils/gameLoader.ts": "461fd268782b763cf30c3f4ab1593ce04725aaedb8f5bc2b4176a9463468d6c8",
+    "frontend/components/game/session/incomingUiPackets.ts": "b52e0233186339327ca07e62cc168d1672294c78ce7f4898af3fa5b76d76e6eb",
+    "frontend/components/game/session/incomingPacketTypes.ts": "d18c31c1e8b9b3b7db996883f313520b853d3516fbf238677f92a4e195285a1a",
+    "frontend/components/game/core/MapRendererCore.tsx": "a30d192d20754f92c7a63682f61b2a2306644d2c5d9b7390da1b51fa11b3bcde",
+    "frontend/components/game/core/useSceneController.ts": "44b4b3253b90f3f32d0ee00c34a24fd85ab0617d68952137f1868b093f21d62e",
+    "frontend/components/game/rendering/sceneRenderer.ts": "3b62b6fa662f009a50683c60d726fffea5e0fb4bb3d1d8bb7ed5b39cde3c1289",
+    "tools/map-live-cache-tests/render-regressions.mjs": "ea8fafbf730a4995902e67e65c613e7147a6607a8261ccc708fc08105e2a3b58",
+    "tools/map-live-cache-tests/live-browser-validation.mjs": "83b5feaa0691159476deb8f99503338607868599dc5721e8b28488787db60c0b"
+  }
+}

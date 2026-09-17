@@ -1,0 +1,638 @@
+{
+  "started": "2026-09-17T20:11:55.308Z",
+  "scope": "Real local API, PostgreSQL, game server and two isolated Chromium clients; no production services",
+  "checks": [
+    {
+      "name": "Both real clients entered map 1",
+      "passed": true
+    },
+    {
+      "name": "Unpublished drafts are invisible to ordinary requests",
+      "passed": true
+    },
+    {
+      "name": "Unpublished draft leaves rendered pixels unchanged",
+      "passed": true
+    },
+    {
+      "name": "API notified the running game server",
+      "passed": true
+    },
+    {
+      "name": "Server notified both players",
+      "passed": true
+    },
+    {
+      "name": "Only the affected player was relocated",
+      "passed": true
+    },
+    {
+      "name": "Unaffected player stayed in place",
+      "passed": true
+    },
+    {
+      "name": "Trapped player moved to an adjacent safe tile",
+      "passed": true
+    },
+    {
+      "name": "Connected observer sees published graphic",
+      "passed": true
+    },
+    {
+      "name": "Both clients requested fresh overrides",
+      "passed": true
+    },
+    {
+      "name": "Both clients received the publication marker",
+      "passed": true
+    },
+    {
+      "name": "Movement cannot enter the new wall",
+      "passed": true
+    },
+    {
+      "name": "Relocated player remains able to move",
+      "passed": true
+    },
+    {
+      "name": "A second publication restores original pixels",
+      "passed": true
+    },
+    {
+      "name": "Removing a colored layer clears its existing sprite",
+      "passed": true
+    },
+    {
+      "name": "Fixture terrain is restored",
+      "passed": true
+    },
+    {
+      "name": "Neither player reconnected during publication",
+      "passed": true
+    },
+    {
+      "name": "Game process did not restart",
+      "passed": true
+    },
+    {
+      "name": "No browser page exceptions",
+      "passed": true
+    }
+  ],
+  "requests": [
+    {
+      "at": "2026-09-17T20:12:56.392Z",
+      "route": "/maps/1/overrides",
+      "method": "GET",
+      "status": 200,
+      "data": {
+        "mapNum": 1,
+        "includeDrafts": false,
+        "overrides": [
+          {
+            "x": 48,
+            "y": 59,
+            "layer": 1,
+            "grhIndex": 6012,
+            "blocked": null,
+            "status": "published"
+          },
+          {
+            "x": 49,
+            "y": 59,
+            "layer": 1,
+            "grhIndex": 6013,
+            "blocked": null,
+            "status": "published"
+          },
+          {
+            "x": 54,
+            "y": 61,
+            "layer": 1,
+            "grhIndex": 6385,
+            "blocked": null,
+            "status": "published"
+          }
+        ],
+        "entities": []
+      }
+    },
+    {
+      "at": "2026-09-17T20:13:03.090Z",
+      "route": "/admin/game-data/maps/1/tiles",
+      "method": "PUT",
+      "body": {
+        "tiles": [
+          {
+            "x": 45,
+            "y": 59,
+            "layer": 1,
+            "grhIndex": 6013,
+            "blocked": true
+          },
+          {
+            "x": 54,
+            "y": 61,
+            "layer": 1,
+            "grhIndex": 1,
+            "blocked": null
+          }
+        ]
+      },
+      "status": 200,
+      "data": {
+        "applied": 2
+      }
+    },
+    {
+      "at": "2026-09-17T20:13:03.096Z",
+      "route": "/maps/1/overrides",
+      "method": "GET",
+      "status": 200,
+      "data": {
+        "mapNum": 1,
+        "includeDrafts": false,
+        "overrides": [
+          {
+            "x": 48,
+            "y": 59,
+            "layer": 1,
+            "grhIndex": 6012,
+            "blocked": null,
+            "status": "published"
+          },
+          {
+            "x": 49,
+            "y": 59,
+            "layer": 1,
+            "grhIndex": 6013,
+            "blocked": null,
+            "status": "published"
+          },
+          {
+            "x": 54,
+            "y": 61,
+            "layer": 1,
+            "grhIndex": 6385,
+            "blocked": null,
+            "status": "published"
+          }
+        ],
+        "entities": []
+      }
+    },
+    {
+      "at": "2026-09-17T20:13:05.546Z",
+      "route": "/admin/game-data/maps/1/publish",
+      "method": "POST",
+      "body": {},
+      "status": 200,
+      "data": {
+        "published": 2,
+        "publishedEntities": 0,
+        "version": 1789675985507,
+        "liveReload": {
+          "notified": true,
+          "skipped": false,
+          "result": {
+            "mapNum": 1,
+            "appliedOverrides": 4,
+            "version": 1789675985507,
+            "relocatedPlayers": 1,
+            "notifiedPlayers": 2,
+            "blockedChanges": 1
+          }
+        }
+      }
+    },
+    {
+      "at": "2026-09-17T20:13:13.548Z",
+      "route": "/admin/game-data/maps/1/tiles",
+      "method": "PUT",
+      "body": {
+        "tiles": [
+          {
+            "x": 45,
+            "y": 59,
+            "layer": 1,
+            "grhIndex": 6013,
+            "blocked": null
+          },
+          {
+            "x": 54,
+            "y": 61,
+            "layer": 1,
+            "grhIndex": 6385,
+            "blocked": null
+          }
+        ]
+      },
+      "status": 200,
+      "data": {
+        "applied": 2
+      }
+    },
+    {
+      "at": "2026-09-17T20:13:13.576Z",
+      "route": "/admin/game-data/maps/1/publish",
+      "method": "POST",
+      "body": {},
+      "status": 200,
+      "data": {
+        "published": 2,
+        "publishedEntities": 0,
+        "version": 1789675993560,
+        "liveReload": {
+          "notified": true,
+          "skipped": false,
+          "result": {
+            "mapNum": 1,
+            "appliedOverrides": 4,
+            "version": 1789675993560,
+            "relocatedPlayers": 0,
+            "notifiedPlayers": 2,
+            "blockedChanges": 1
+          }
+        }
+      }
+    },
+    {
+      "at": "2026-09-17T20:13:16.345Z",
+      "route": "/admin/game-data/maps/1/tiles",
+      "method": "PUT",
+      "body": {
+        "tiles": [
+          {
+            "x": 54,
+            "y": 61,
+            "layer": 1,
+            "grhIndex": null,
+            "blocked": null
+          }
+        ]
+      },
+      "status": 200,
+      "data": {
+        "applied": 1
+      }
+    },
+    {
+      "at": "2026-09-17T20:13:16.378Z",
+      "route": "/admin/game-data/maps/1/publish",
+      "method": "POST",
+      "body": {},
+      "status": 200,
+      "data": {
+        "published": 1,
+        "publishedEntities": 0,
+        "version": 1789675996359,
+        "liveReload": {
+          "notified": true,
+          "skipped": false,
+          "result": {
+            "mapNum": 1,
+            "appliedOverrides": 4,
+            "version": 1789675996359,
+            "relocatedPlayers": 0,
+            "notifiedPlayers": 2,
+            "blockedChanges": 0
+          }
+        }
+      }
+    },
+    {
+      "at": "2026-09-17T20:13:19.049Z",
+      "route": "/admin/game-data/maps/1/tiles",
+      "method": "PUT",
+      "body": {
+        "tiles": [
+          {
+            "x": 45,
+            "y": 59,
+            "layer": 1,
+            "grhIndex": 6013,
+            "blocked": null
+          },
+          {
+            "x": 54,
+            "y": 61,
+            "layer": 1,
+            "grhIndex": 6385,
+            "blocked": null
+          }
+        ]
+      },
+      "status": 200,
+      "data": {
+        "applied": 2
+      }
+    },
+    {
+      "at": "2026-09-17T20:13:19.083Z",
+      "route": "/admin/game-data/maps/1/publish",
+      "method": "POST",
+      "body": {},
+      "status": 200,
+      "data": {
+        "published": 2,
+        "publishedEntities": 0,
+        "version": 1789675999058,
+        "liveReload": {
+          "notified": true,
+          "skipped": false,
+          "result": {
+            "mapNum": 1,
+            "appliedOverrides": 4,
+            "version": 1789675999058,
+            "relocatedPlayers": 0,
+            "notifiedPlayers": 2,
+            "blockedChanges": 0
+          }
+        }
+      }
+    }
+  ],
+  "clients": [
+    {
+      "errors": [],
+      "sockets": [
+        {
+          "opened": 1789675946842,
+          "closed": false,
+          "markers": []
+        },
+        {
+          "opened": 1789675961532,
+          "closed": false,
+          "markers": [
+            {
+              "at": 1789675985686,
+              "text": "[MAP_LIVE_RELOAD] map=1 version=1789675985507"
+            },
+            {
+              "at": 1789675993577,
+              "text": "[MAP_LIVE_RELOAD] map=1 version=1789675993560"
+            },
+            {
+              "at": 1789675996380,
+              "text": "[MAP_LIVE_RELOAD] map=1 version=1789675996359"
+            },
+            {
+              "at": 1789675999085,
+              "text": "[MAP_LIVE_RELOAD] map=1 version=1789675999058"
+            }
+          ]
+        }
+      ],
+      "overrideRequests": [
+        {
+          "at": 1789675944183,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675947438,
+          "url": "http://127.0.0.1:46861/maps/5/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675947714,
+          "url": "http://127.0.0.1:46861/maps/8/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675947883,
+          "url": "http://127.0.0.1:46861/maps/11/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675948008,
+          "url": "http://127.0.0.1:46861/maps/168/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675948146,
+          "url": "http://127.0.0.1:46861/maps/273/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675948314,
+          "url": "http://127.0.0.1:46861/maps/40/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675948511,
+          "url": "http://127.0.0.1:46861/maps/2/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675959094,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675961964,
+          "url": "http://127.0.0.1:46861/maps/5/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675962277,
+          "url": "http://127.0.0.1:46861/maps/8/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675962449,
+          "url": "http://127.0.0.1:46861/maps/11/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675962606,
+          "url": "http://127.0.0.1:46861/maps/168/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675962812,
+          "url": "http://127.0.0.1:46861/maps/273/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675963049,
+          "url": "http://127.0.0.1:46861/maps/40/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675963321,
+          "url": "http://127.0.0.1:46861/maps/2/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675985799,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675993597,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675996402,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675999170,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "errors": [],
+      "sockets": [
+        {
+          "opened": 1789675972974,
+          "closed": false,
+          "markers": [
+            {
+              "at": 1789675985560,
+              "text": "[MAP_LIVE_RELOAD] map=1 version=1789675985507"
+            },
+            {
+              "at": 1789675993578,
+              "text": "[MAP_LIVE_RELOAD] map=1 version=1789675993560"
+            },
+            {
+              "at": 1789675996380,
+              "text": "[MAP_LIVE_RELOAD] map=1 version=1789675996359"
+            },
+            {
+              "at": 1789675999085,
+              "text": "[MAP_LIVE_RELOAD] map=1 version=1789675999058"
+            }
+          ]
+        }
+      ],
+      "overrideRequests": [
+        {
+          "at": 1789675966899,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675973406,
+          "url": "http://127.0.0.1:46861/maps/5/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675974817,
+          "url": "http://127.0.0.1:46861/maps/8/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675974997,
+          "url": "http://127.0.0.1:46861/maps/11/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675975282,
+          "url": "http://127.0.0.1:46861/maps/168/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675975633,
+          "url": "http://127.0.0.1:46861/maps/273/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675976379,
+          "url": "http://127.0.0.1:46861/maps/40/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675976677,
+          "url": "http://127.0.0.1:46861/maps/2/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675985581,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675993604,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675996402,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        },
+        {
+          "at": 1789675999106,
+          "url": "http://127.0.0.1:46861/maps/1/overrides",
+          "status": 200
+        }
+      ]
+    }
+  ],
+  "passed": true,
+  "initialPositions": [
+    {
+      "map": 1,
+      "x": 45,
+      "y": 59
+    },
+    {
+      "map": 1,
+      "x": 50,
+      "y": 59
+    }
+  ],
+  "probeTile": {
+    "x": 54,
+    "y": 61
+  },
+  "pixelClip": {
+    "x": 630,
+    "y": 566,
+    "width": 31,
+    "height": 31
+  },
+  "publication": {
+    "published": 2,
+    "publishedEntities": 0,
+    "version": 1789675985507,
+    "liveReload": {
+      "notified": true,
+      "skipped": false,
+      "result": {
+        "mapNum": 1,
+        "appliedOverrides": 4,
+        "version": 1789675985507,
+        "relocatedPlayers": 1,
+        "notifiedPlayers": 2,
+        "blockedChanges": 1
+      }
+    }
+  },
+  "afterPublishPositions": [
+    {
+      "map": 1,
+      "x": 44,
+      "y": 59
+    },
+    {
+      "map": 1,
+      "x": 50,
+      "y": 59
+    }
+  ],
+  "afterMovement": {
+    "map": 1,
+    "x": 42,
+    "y": 59
+  },
+  "finished": "2026-09-17T20:13:21.339Z"
+}

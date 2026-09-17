@@ -155,6 +155,7 @@ export function useSceneController({
                 includeObjects?: boolean;
                 bounds?: TileBounds;
                 excludeBounds?: TileBounds;
+                replaceLayers?: boolean;
             },
         ) =>
             renderSceneMap(
@@ -169,6 +170,26 @@ export function useSceneController({
                 options,
             ),
         [canUseEngineContainer, preloadGraphicIds],
+    );
+
+    const redrawMapTiles = useCallback(
+        async (engine: Engine, tiles: Array<{ x: number; y: number }>) => {
+            const mapNumber = engine.mapNumber;
+            for (const { x, y } of tiles) {
+                if (engine.isDestroyed || engine.mapNumber !== mapNumber) return;
+                await renderMap(engine, {
+                    includeLayers: ["1", "2", "3", "4"],
+                    includeObjects: false,
+                    replaceLayers: true,
+                    bounds: { minX: x, maxX: x, minY: y, maxY: y },
+                });
+            }
+            if (!engine.isDestroyed) {
+                engine.roofVisibilityDirty = true;
+                engine.updateCulling();
+            }
+        },
+        [renderMap],
     );
 
     const ensureMapTile = useCallback(
@@ -231,6 +252,7 @@ export function useSceneController({
         queueTileObjectVisualSync,
         removeObjectSprite,
         renderMap,
+        redrawMapTiles,
         scheduleTileObjectVisualSyncFlush,
         setWorldVisibility,
         startMapChangeTransition,
